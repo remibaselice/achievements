@@ -20,21 +20,11 @@ body {
     border-bottom: 1px solid #333;
 }
 
-.tier {
-    text-align: center;
-}
-
-.tier span {
-    font-size: 26px;
-}
-
-/* Layout */
 #container {
     display: flex;
     height: calc(100vh - 80px);
 }
 
-/* Left */
 #games {
     width: 300px;
     border-right: 1px solid #333;
@@ -48,36 +38,51 @@ body {
     margin-bottom: 6px;
 }
 
-.game:hover {
-    background: #2a2a2a;
-}
-
-.selected {
-    background: #444;
-}
+.game:hover { background:#2a2a2a; }
+.selected { background:#444; }
 
 button {
-    margin-top: 5px;
-    width: 100%;
+    width:100%;
+    margin-top:5px;
 }
 
 #noGames {
-    text-align: center;
-    margin-top: 40px;
-    color: #888;
+    text-align:center;
+    margin-top:40px;
+    color:#777;
 }
 
-/* Middle */
 #achievements {
-    flex: 1;
-    padding: 20px;
+    flex:1;
+    padding:20px;
 }
 
 .achievement {
-    background: #1f1f1f;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 10px;
+    background:#1f1f1f;
+    padding:10px;
+    border-radius:6px;
+    margin-bottom:10px;
+    border:3px solid gray;
+}
+
+.small {
+    font-size:12px;
+    color:#aaa;
+}
+
+.bronze { border-color:#cd7f32; }
+.silver { border-color:#c0c0c0; }
+.gold { border-color:#ffd700; }
+.platinum { border-color:#00ffff; }
+
+select {
+    margin-top:6px;
+}
+
+.deleteAch {
+    float:right;
+    cursor:pointer;
+    color:red;
 }
 </style>
 </head>
@@ -85,10 +90,7 @@ button {
 <body>
 
 <div id="topBar">
-    <div class="tier">Bronze<br><span>0</span></div>
-    <div class="tier">Silver<br><span>0</span></div>
-    <div class="tier">Gold<br><span>0</span></div>
-    <div class="tier">Platinum<br><span>0</span></div>
+Bronze • Silver • Gold • Platinum
 </div>
 
 <div id="container">
@@ -100,84 +102,134 @@ button {
     <div id="noGames" style="display:none;">No games available</div>
 </div>
 
-<div id="achievements"></div>
+<div id="achievements">
+<button onclick="addAchievement()">+ Add Achievement</button>
+<div id="achList"></div>
+</div>
 
 </div>
 
 <script>
 
-const defaultAchievements = ["Bronze","Silver","Gold","Platinum"];
+const defaultAchievements = [
+    {name:"Bronze",how:"Complete something basic",tier:"bronze"},
+    {name:"Silver",how:"Go a little further",tier:"silver"},
+    {name:"Gold",how:"Do something impressive",tier:"gold"},
+    {name:"Platinum",how:"Perfect completion",tier:"platinum"}
+];
 
 let games = JSON.parse(localStorage.getItem("games")) || {
-    "Mario Kart World": ["First Victory","Drift King","Cup Champion","Perfect Lap","World Tour Complete"],
-    "Cyberpunk 2077 Ultimate Edition": ["Street Rookie","Chrome Collector","Night City Legend","Cyber Master","Ultimate Merc"],
-    "Zelda BOTW Switch 2": ["Leave Plateau","Shrine Seeker","Master Sword","Divine Beasts","Hero of Hyrule"]
+    "Mario Kart World": JSON.parse(JSON.stringify(defaultAchievements))
 };
 
-let selectedGame = null;
+let selectedGame=null;
 
-function save() {
-    localStorage.setItem("games", JSON.stringify(games));
+function save(){
+    localStorage.setItem("games",JSON.stringify(games));
 }
 
-function renderGames() {
-    const list = document.getElementById("gameList");
-    list.innerHTML = "";
+function renderGames(){
+    const list=document.getElementById("gameList");
+    list.innerHTML="";
 
-    const keys = Object.keys(games);
+    const keys=Object.keys(games);
 
-    if(keys.length === 0) {
-        document.getElementById("noGames").style.display = "block";
-        document.getElementById("achievements").innerHTML = "";
+    if(keys.length===0){
+        document.getElementById("noGames").style.display="block";
+        document.getElementById("achList").innerHTML="";
         return;
     }
 
-    document.getElementById("noGames").style.display = "none";
+    document.getElementById("noGames").style.display="none";
 
-    keys.forEach(name => {
-        const div = document.createElement("div");
-        div.className = "game";
-        if(name === selectedGame) div.classList.add("selected");
-        div.textContent = name;
-        div.onclick = () => selectGame(name);
-        list.appendChild(div);
+    keys.forEach(k=>{
+        const d=document.createElement("div");
+        d.className="game"+(k===selectedGame?" selected":"");
+        d.textContent=k;
+        d.onclick=()=>selectGame(k);
+        list.appendChild(d);
     });
 
     if(!selectedGame) selectGame(keys[0]);
 }
 
-function selectGame(name) {
-    selectedGame = name;
-    document.querySelectorAll(".game").forEach(g=>g.classList.remove("selected"));
-    [...document.querySelectorAll(".game")].find(g=>g.textContent===name)?.classList.add("selected");
+function selectGame(name){
+    selectedGame=name;
+    renderGames();
+    renderAchievements();
+}
 
-    const mid = document.getElementById("achievements");
-    mid.innerHTML = "";
+function addGame(){
+    const name=prompt("Game name?");
+    if(!name) return;
+    games[name]=JSON.parse(JSON.stringify(defaultAchievements));
+    selectedGame=name;
+    save();
+    renderGames();
+    renderAchievements();
+}
 
-    games[name].forEach(a=>{
+function deleteGame(){
+    if(!selectedGame) return;
+    delete games[selectedGame];
+    selectedGame=null;
+    save();
+    renderGames();
+}
+
+function renderAchievements(){
+    const wrap=document.getElementById("achList");
+    wrap.innerHTML="";
+    if(!selectedGame) return;
+
+    games[selectedGame].forEach((a,i)=>{
         const div=document.createElement("div");
-        div.className="achievement";
-        div.textContent=a;
-        mid.appendChild(div);
+        div.className="achievement "+a.tier;
+
+        div.innerHTML=`
+        <span class="deleteAch" onclick="deleteAchievement(${i})">✖</span>
+        <strong>${a.name}</strong>
+        <div class="small">${a.how}</div>
+
+        <select onchange="changeTier(${i},this.value)">
+            <option value="bronze" ${a.tier==="bronze"?"selected":""}>Bronze</option>
+            <option value="silver" ${a.tier==="silver"?"selected":""}>Silver</option>
+            <option value="gold" ${a.tier==="gold"?"selected":""}>Gold</option>
+            <option value="platinum" ${a.tier==="platinum"?"selected":""}>Platinum</option>
+        </select>
+        `;
+
+        wrap.appendChild(div);
     });
 }
 
-function addGame() {
-    const name = prompt("Game name?");
-    if(!name) return;
+function addAchievement(){
+    if(!selectedGame) return;
 
-    games[name] = [...defaultAchievements];
+    const name=prompt("Achievement name?");
+    if(!name) return;
+    const how=prompt("How to achieve it?")||"";
+
+    games[selectedGame].push({
+        name,
+        how,
+        tier:"bronze"
+    });
+
     save();
-    selectedGame = name;
-    renderGames();
+    renderAchievements();
 }
 
-function deleteGame() {
-    if(!selectedGame) return;
-    delete games[selectedGame];
-    selectedGame = null;
+function deleteAchievement(i){
+    games[selectedGame].splice(i,1);
     save();
-    renderGames();
+    renderAchievements();
+}
+
+function changeTier(i,val){
+    games[selectedGame][i].tier=val;
+    save();
+    renderAchievements();
 }
 
 renderGames();
