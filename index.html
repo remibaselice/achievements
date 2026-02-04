@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Achievement Tracker</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #121212;
+    color: white;
+}
+
+/* TOP BAR */
+#topBar {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    padding: 20px;
+    border-bottom: 1px solid #333;
+}
+
+.tier {
+    text-align: center;
+}
+
+.tier h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.tier span {
+    display: block;
+    margin-top: 5px;
+    font-size: 26px;
+}
+
+/* MAIN LAYOUT */
+#container {
+    display: flex;
+    height: calc(100vh - 80px);
+}
+
+/* LEFT GAME LIST */
+#games {
+    width: 280px;
+    border-right: 1px solid #333;
+    padding: 15px;
+}
+
+.game {
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.game:hover {
+    background: #2a2a2a;
+}
+
+.selected {
+    background: #444;
+}
+
+/* ACHIEVEMENTS */
+#achievements {
+    flex: 1;
+    padding: 20px;
+}
+
+.achievement {
+    background: #1f1f1f;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="topBar">
+    <div class="tier">
+        <h2>Bronze</h2>
+        <span id="bronze">0</span>
+    </div>
+
+    <div class="tier">
+        <h2>Silver</h2>
+        <span id="silver">0</span>
+    </div>
+
+    <div class="tier">
+        <h2>Gold</h2>
+        <span id="gold">0</span>
+    </div>
+
+    <div class="tier">
+        <h2>Platinum</h2>
+        <span id="platinum">0</span>
+    </div>
+</div>
+
+<div id="container">
+
+    <!-- LEFT -->
+    <div id="games">
+        <div class="game selected" onclick="selectGame('mario', this)">
+            Mario Kart World
+        </div>
+
+        <div class="game" onclick="selectGame('cyberpunk', this)">
+            Cyberpunk 2077 Ultimate Edition
+        </div>
+
+        <div class="game" onclick="selectGame('zelda', this)">
+            The Legend of Zelda Breath of the Wild<br>Switch 2 Edition
+        </div>
+    </div>
+
+    <!-- MIDDLE -->
+    <div id="achievements"></div>
+
+</div>
+
+<script>
+
+const achievementData = {
+    mario: [
+        "First Victory",
+        "Drift King",
+        "Cup Champion",
+        "Perfect Lap",
+        "World Tour Complete"
+    ],
+    cyberpunk: [
+        "Street Rookie",
+        "Chrome Collector",
+        "Night City Legend",
+        "Cyber Master",
+        "Ultimate Merc"
+    ],
+    zelda: [
+        "Leave the Plateau",
+        "Shrine Seeker",
+        "Master Swordsman",
+        "Divine Beast Slayer",
+        "Hero of Hyrule"
+    ]
+};
+
+function selectGame(game, element) {
+
+    document.querySelectorAll(".game").forEach(g => g.classList.remove("selected"));
+    element.classList.add("selected");
+
+    const container = document.getElementById("achievements");
+    container.innerHTML = "";
+
+    achievementData[game].forEach(a => {
+        const div = document.createElement("div");
+        div.className = "achievement";
+        div.textContent = a;
+        container.appendChild(div);
+    });
+}
+
+// Load first game by default
+selectGame("mario", document.querySelector(".game"));
+
+</script>
+
+</body>
+</html>
