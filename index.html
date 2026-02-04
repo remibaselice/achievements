@@ -12,7 +12,6 @@ body {
     color: white;
 }
 
-/* TOP BAR */
 #topBar {
     display: flex;
     justify-content: center;
@@ -25,35 +24,28 @@ body {
     text-align: center;
 }
 
-.tier h2 {
-    margin: 0;
-    font-size: 18px;
-}
-
 .tier span {
-    display: block;
-    margin-top: 5px;
     font-size: 26px;
 }
 
-/* MAIN LAYOUT */
+/* Layout */
 #container {
     display: flex;
     height: calc(100vh - 80px);
 }
 
-/* LEFT GAME LIST */
+/* Left */
 #games {
-    width: 280px;
+    width: 300px;
     border-right: 1px solid #333;
-    padding: 15px;
+    padding: 10px;
 }
 
 .game {
-    padding: 12px;
-    cursor: pointer;
+    padding: 10px;
     border-radius: 6px;
-    margin-bottom: 8px;
+    cursor: pointer;
+    margin-bottom: 6px;
 }
 
 .game:hover {
@@ -64,7 +56,18 @@ body {
     background: #444;
 }
 
-/* ACHIEVEMENTS */
+button {
+    margin-top: 5px;
+    width: 100%;
+}
+
+#noGames {
+    text-align: center;
+    margin-top: 40px;
+    color: #888;
+}
+
+/* Middle */
 #achievements {
     flex: 1;
     padding: 20px;
@@ -82,93 +85,102 @@ body {
 <body>
 
 <div id="topBar">
-    <div class="tier">
-        <h2>Bronze</h2>
-        <span id="bronze">0</span>
-    </div>
-
-    <div class="tier">
-        <h2>Silver</h2>
-        <span id="silver">0</span>
-    </div>
-
-    <div class="tier">
-        <h2>Gold</h2>
-        <span id="gold">0</span>
-    </div>
-
-    <div class="tier">
-        <h2>Platinum</h2>
-        <span id="platinum">0</span>
-    </div>
+    <div class="tier">Bronze<br><span>0</span></div>
+    <div class="tier">Silver<br><span>0</span></div>
+    <div class="tier">Gold<br><span>0</span></div>
+    <div class="tier">Platinum<br><span>0</span></div>
 </div>
 
 <div id="container">
 
-    <!-- LEFT -->
-    <div id="games">
-        <div class="game selected" onclick="selectGame('mario', this)">
-            Mario Kart World
-        </div>
+<div id="games">
+    <button onclick="addGame()">+ Add Game</button>
+    <button onclick="deleteGame()">Delete Selected</button>
+    <div id="gameList"></div>
+    <div id="noGames" style="display:none;">No games available</div>
+</div>
 
-        <div class="game" onclick="selectGame('cyberpunk', this)">
-            Cyberpunk 2077 Ultimate Edition
-        </div>
-
-        <div class="game" onclick="selectGame('zelda', this)">
-            The Legend of Zelda Breath of the Wild<br>Switch 2 Edition
-        </div>
-    </div>
-
-    <!-- MIDDLE -->
-    <div id="achievements"></div>
+<div id="achievements"></div>
 
 </div>
 
 <script>
 
-const achievementData = {
-    mario: [
-        "First Victory",
-        "Drift King",
-        "Cup Champion",
-        "Perfect Lap",
-        "World Tour Complete"
-    ],
-    cyberpunk: [
-        "Street Rookie",
-        "Chrome Collector",
-        "Night City Legend",
-        "Cyber Master",
-        "Ultimate Merc"
-    ],
-    zelda: [
-        "Leave the Plateau",
-        "Shrine Seeker",
-        "Master Swordsman",
-        "Divine Beast Slayer",
-        "Hero of Hyrule"
-    ]
+const defaultAchievements = ["Bronze","Silver","Gold","Platinum"];
+
+let games = JSON.parse(localStorage.getItem("games")) || {
+    "Mario Kart World": ["First Victory","Drift King","Cup Champion","Perfect Lap","World Tour Complete"],
+    "Cyberpunk 2077 Ultimate Edition": ["Street Rookie","Chrome Collector","Night City Legend","Cyber Master","Ultimate Merc"],
+    "Zelda BOTW Switch 2": ["Leave Plateau","Shrine Seeker","Master Sword","Divine Beasts","Hero of Hyrule"]
 };
 
-function selectGame(game, element) {
+let selectedGame = null;
 
-    document.querySelectorAll(".game").forEach(g => g.classList.remove("selected"));
-    element.classList.add("selected");
+function save() {
+    localStorage.setItem("games", JSON.stringify(games));
+}
 
-    const container = document.getElementById("achievements");
-    container.innerHTML = "";
+function renderGames() {
+    const list = document.getElementById("gameList");
+    list.innerHTML = "";
 
-    achievementData[game].forEach(a => {
+    const keys = Object.keys(games);
+
+    if(keys.length === 0) {
+        document.getElementById("noGames").style.display = "block";
+        document.getElementById("achievements").innerHTML = "";
+        return;
+    }
+
+    document.getElementById("noGames").style.display = "none";
+
+    keys.forEach(name => {
         const div = document.createElement("div");
-        div.className = "achievement";
-        div.textContent = a;
-        container.appendChild(div);
+        div.className = "game";
+        if(name === selectedGame) div.classList.add("selected");
+        div.textContent = name;
+        div.onclick = () => selectGame(name);
+        list.appendChild(div);
+    });
+
+    if(!selectedGame) selectGame(keys[0]);
+}
+
+function selectGame(name) {
+    selectedGame = name;
+    document.querySelectorAll(".game").forEach(g=>g.classList.remove("selected"));
+    [...document.querySelectorAll(".game")].find(g=>g.textContent===name)?.classList.add("selected");
+
+    const mid = document.getElementById("achievements");
+    mid.innerHTML = "";
+
+    games[name].forEach(a=>{
+        const div=document.createElement("div");
+        div.className="achievement";
+        div.textContent=a;
+        mid.appendChild(div);
     });
 }
 
-// Load first game by default
-selectGame("mario", document.querySelector(".game"));
+function addGame() {
+    const name = prompt("Game name?");
+    if(!name) return;
+
+    games[name] = [...defaultAchievements];
+    save();
+    selectedGame = name;
+    renderGames();
+}
+
+function deleteGame() {
+    if(!selectedGame) return;
+    delete games[selectedGame];
+    selectedGame = null;
+    save();
+    renderGames();
+}
+
+renderGames();
 
 </script>
 
