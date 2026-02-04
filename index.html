@@ -107,7 +107,10 @@ select {
 <body>
 
 <div id="topBar">
-Bronze • Silver • Gold • Platinum
+<span id="bronzeCounter">Bronze: 0</span> • 
+<span id="silverCounter">Silver: 0</span> • 
+<span id="goldCounter">Gold: 0</span> • 
+<span id="platinumCounter">Platinum: 0</span>
 </div>
 
 <div id="container">
@@ -154,6 +157,7 @@ function renderGames(){
     if(keys.length===0){
         document.getElementById("noGames").style.display="block";
         document.getElementById("achList").innerHTML="";
+        updateTopBarCounters();
         return;
     }
 
@@ -192,6 +196,7 @@ function deleteGame(){
     selectedGame=null;
     save();
     renderGames();
+    updateTopBarCounters();
 }
 
 function renderAchievements(){
@@ -202,6 +207,9 @@ function renderAchievements(){
     games[selectedGame].forEach((a,i)=>{
         const div=document.createElement("div");
         div.className="achievement "+a.tier;
+
+        // check if we previously clicked this achievement
+        const clicked = a.completed ? "clicked" : "";
 
         div.innerHTML=`
         <span class="deleteAch" onclick="deleteAchievement(${i})">✖</span>
@@ -215,15 +223,41 @@ function renderAchievements(){
             <option value="platinum" ${a.tier==="platinum"?"selected":""}>Platinum</option>
         </select>
 
-        <button class="achieveBtn" onclick="markAchievement(this)"></button>
+        <button class="achieveBtn ${clicked}" onclick="markAchievement(this, ${i})"></button>
         `;
 
         wrap.appendChild(div);
     });
+
+    updateTopBarCounters();
 }
 
-function markAchievement(btn){
-    btn.classList.add("clicked");
+function markAchievement(btn, index){
+    const achievement = games[selectedGame][index];
+    if(!achievement.completed){
+        achievement.completed = true;
+        btn.classList.add("clicked");
+        save();
+        updateTopBarCounters();
+    }
+}
+
+function updateTopBarCounters(){
+    let bronze = 0, silver = 0, gold = 0, platinum = 0;
+    if(selectedGame){
+        games[selectedGame].forEach(a=>{
+            if(a.completed){
+                if(a.tier==="bronze") bronze++;
+                else if(a.tier==="silver") silver++;
+                else if(a.tier==="gold") gold++;
+                else if(a.tier==="platinum") platinum++;
+            }
+        });
+    }
+    document.getElementById("bronzeCounter").textContent = `Bronze: ${bronze}`;
+    document.getElementById("silverCounter").textContent = `Silver: ${silver}`;
+    document.getElementById("goldCounter").textContent = `Gold: ${gold}`;
+    document.getElementById("platinumCounter").textContent = `Platinum: ${platinum}`;
 }
 
 function addAchievement(){
@@ -236,7 +270,8 @@ function addAchievement(){
     games[selectedGame].push({
         name,
         how,
-        tier:"bronze"
+        tier:"bronze",
+        completed:false
     });
 
     save();
