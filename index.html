@@ -86,7 +86,7 @@ select {
     color:red;
 }
 
-/* New button styles */
+/* Achievement button */
 .achieveBtn {
     position: absolute;
     right: 10px;
@@ -116,6 +116,9 @@ select {
 <div id="container">
 
 <div id="games">
+    <!-- Save/Load Buttons -->
+    <button onclick="saveToPassword()">Save Data</button>
+    <button onclick="loadFromPassword()">Load Data</button>
     <button onclick="addGame()">+ Add Game</button>
     <button onclick="deleteGame()">Delete Selected</button>
     <div id="gameList"></div>
@@ -131,6 +134,7 @@ select {
 
 <script>
 
+// Default Achievements
 const defaultAchievements = [
     {name:"Bronze",how:"Complete something basic",tier:"bronze"},
     {name:"Silver",how:"Go a little further",tier:"silver"},
@@ -138,16 +142,19 @@ const defaultAchievements = [
     {name:"Platinum",how:"Perfect completion",tier:"platinum"}
 ];
 
+// Load from localStorage
 let games = JSON.parse(localStorage.getItem("games")) || {
     "Mario Kart World": JSON.parse(JSON.stringify(defaultAchievements))
 };
 
 let selectedGame=null;
 
+// Save to localStorage
 function save(){
     localStorage.setItem("games",JSON.stringify(games));
 }
 
+// Render Games
 function renderGames(){
     const list=document.getElementById("gameList");
     list.innerHTML="";
@@ -180,6 +187,7 @@ function selectGame(name){
     renderAchievements();
 }
 
+// Add/Delete Games
 function addGame(){
     const name=prompt("Game name?");
     if(!name) return;
@@ -199,6 +207,7 @@ function deleteGame(){
     updateTopBarCounters();
 }
 
+// Render Achievements
 function renderAchievements(){
     const wrap=document.getElementById("achList");
     wrap.innerHTML="";
@@ -208,7 +217,6 @@ function renderAchievements(){
         const div=document.createElement("div");
         div.className="achievement "+a.tier;
 
-        // check if we previously clicked this achievement
         const clicked = a.completed ? "clicked" : "";
 
         div.innerHTML=`
@@ -232,6 +240,7 @@ function renderAchievements(){
     updateTopBarCounters();
 }
 
+// Achievement Button
 function markAchievement(btn, index){
     const achievement = games[selectedGame][index];
     if(!achievement.completed){
@@ -242,6 +251,7 @@ function markAchievement(btn, index){
     }
 }
 
+// Update Top Bar Counters
 function updateTopBarCounters(){
     let bronze = 0, silver = 0, gold = 0, platinum = 0;
     if(selectedGame){
@@ -260,6 +270,7 @@ function updateTopBarCounters(){
     document.getElementById("platinumCounter").textContent = `Platinum: ${platinum}`;
 }
 
+// Add Achievement
 function addAchievement(){
     if(!selectedGame) return;
 
@@ -288,6 +299,33 @@ function changeTier(i,val){
     games[selectedGame][i].tier=val;
     save();
     renderAchievements();
+}
+
+// ===== Password Save/Load System =====
+function saveToPassword(){
+    const jsonStr = JSON.stringify(games);
+    // encode as base64 to make it safe as a "password"
+    const password = btoa(unescape(encodeURIComponent(jsonStr)));
+    prompt("Copy this password to save your data:", password);
+}
+
+function loadFromPassword(){
+    const password = prompt("Paste your saved password:");
+    if(!password) return;
+    try {
+        const jsonStr = decodeURIComponent(escape(atob(password)));
+        const loadedGames = JSON.parse(jsonStr);
+        if(typeof loadedGames === "object"){
+            games = loadedGames;
+            save();
+            renderGames();
+            alert("Data loaded successfully!");
+        } else {
+            alert("Invalid password.");
+        }
+    } catch(e){
+        alert("Invalid password.");
+    }
 }
 
 renderGames();
