@@ -63,6 +63,7 @@ button {
     border-radius:6px;
     margin-bottom:10px;
     border:3px solid gray;
+    position: relative;
 }
 
 .small {
@@ -83,6 +84,22 @@ select {
     float:right;
     cursor:pointer;
     color:red;
+}
+
+/* New button styles */
+.achieveBtn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border: 1px solid #000;
+    cursor: pointer;
+}
+
+.achieveBtn.clicked {
+    background-color: red;
 }
 </style>
 </head>
@@ -197,10 +214,16 @@ function renderAchievements(){
             <option value="gold" ${a.tier==="gold"?"selected":""}>Gold</option>
             <option value="platinum" ${a.tier==="platinum"?"selected":""}>Platinum</option>
         </select>
+
+        <button class="achieveBtn" onclick="markAchievement(this)"></button>
         `;
 
         wrap.appendChild(div);
     });
+}
+
+function markAchievement(btn){
+    btn.classList.add("clicked");
 }
 
 function addAchievement(){
